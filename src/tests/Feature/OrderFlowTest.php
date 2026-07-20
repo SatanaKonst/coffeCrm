@@ -60,15 +60,21 @@ final class OrderFlowTest extends TestCase
 
     public function test_store_creates_order_with_snapshot(): void
     {
-        $product = Product::factory()->create(['name' => 'Latte', 'price' => 300, 'is_active' => true]);
+        $product = Product::factory()->create(['name' => 'Latte', 'is_active' => true]);
+        // Фабрика создаёт цены (configure): g200 = $base, g500 = base*2.4, kg1 = base*4.5.
+        $g200Price = $product->priceFor(CoffeeVolume::G200);
+        $this->assertNotNull($g200Price, 'Фабрика должна создавать цену для g200');
 
-        $this->post($this->signedUrl('/crm/orders'), $this->orderPayload($product))
-            ->assertRedirect(route('crm.orders.index'));
+        $this->post($this->signedUrl('/crm/orders'), $this->orderPayload($product, [
+            'volume' => CoffeeVolume::G200->value,
+            'qty' => 2,
+        ]))->assertRedirect(route('crm.orders.index'));
 
         $order = Order::first();
         $this->assertNotNull($order);
         $this->assertSame(OrderStatus::New, $order->status);
-        $this->assertSame('600.00', (string) $order->total); // 300 * 1.0 * 2
+        $expected = number_format($g200Price * 2, 2, '.', '');
+        $this->assertSame($expected, (string) $order->total);
         $this->assertSame('no sugar', $order->comment);
         $this->assertSame('Москва', $order->city);
         $this->assertSame(CoffeeVolume::G200, $order->volume);
@@ -77,23 +83,38 @@ final class OrderFlowTest extends TestCase
 
         $item = $order->items()->first();
         $this->assertSame('Latte', $item->name);
-        $this->assertSame('300.00', (string) $item->price);
+        $this->assertSame((string) $g200Price, (string) $item->price);
         $this->assertSame(2, $item->qty);
     }
 
-    public function test_volume_multiplier_applies_to_price(): void
+    public function test_volume_uses_product_price_for_volume(): void
     {
-        $product = Product::factory()->create(['price' => 400, 'is_active' => true]);
+        $product = Product::factory()->create(['is_active' => true]);
+        $kg1Price = $product->priceFor(CoffeeVolume::KG1);
+        $this->assertNotNull($kg1Price);
 
         $this->post($this->signedUrl('/crm/orders'), $this->orderPayload($product, [
-            'volume' => CoffeeVolume::KG1->value, // mult 4.5
+            'volume' => CoffeeVolume::KG1->value,
             'qty' => 1,
         ]))->assertRedirect(route('crm.orders.index'));
 
         $order = Order::first();
-        // 400 * 4.5 = 1800
-        $this->assertSame('1800.00', (string) $order->total);
-        $this->assertSame('1800.00', (string) $order->items()->first()->price);
+        $this->assertSame((string) $kg1Price, (string) $order->total);
+        $this->assertSame((string) $kg1Price, (string) $order->items()->first()->price);
+    }
+
+    public function test_unavailable_volume_rejected(): void
+    {
+        $product = Product::factory()->create(['is_active' => true]);
+        // Удалим цену kg1 — оставим только g200 и g500.
+        $product->prices()->where('volume', 'kg1')->delete();
+        $this->assertNull($product->fresh()->priceFor(CoffeeVolume::KG1));
+
+        $this->post($this->signedUrl('/crm/orders'), $this->orderPayload($product, [
+            'volume' => CoffeeVolume::KG1->value,
+        ]))->assertSessionHasErrors('volume');
+
+        $this->assertSame(0, Order::count());
     }
 
     public function test_store_updates_client_profile(): void

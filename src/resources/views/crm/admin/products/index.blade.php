@@ -32,7 +32,7 @@
                     <tr>
                         <th scope="col">Название</th>
                         <th scope="col">Описание</th>
-                        <th scope="col" class="text-end">Цена</th>
+                        <th scope="col">Цены</th>
                         <th scope="col">Статус</th>
                         <th scope="col" class="text-end">Действия</th>
                     </tr>
@@ -48,7 +48,15 @@
                                     <span class="text-muted">—</span>
                                 @endif
                             </td>
-                            <td class="text-end">{{ number_format($product->price, 0, '.', ' ') }} ₽</td>
+                            <td>
+                                @if ($product->prices->isEmpty())
+                                    <span class="text-muted small">цены не заданы</span>
+                                @else
+                                    @foreach ($product->prices as $pp)
+                                        <span class="badge text-bg-light">{{ $pp->volume->short() }}: {{ number_format((float) $pp->price, 0, '.', ' ') }} ₽</span>
+                                    @endforeach
+                                @endif
+                            </td>
                             <td>
                                 @if ($product->is_active)
                                     <span class="badge text-bg-success">Активен</span>

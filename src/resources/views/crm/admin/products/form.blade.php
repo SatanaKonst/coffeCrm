@@ -2,6 +2,14 @@
 
 @section('title', $product->exists ? "Правка · {$product->name}" : 'Новый товар · Coffee CRM')
 
+@php
+    $volumes = \App\Enums\CoffeeVolume::cases();
+    // Существующие цены товара по объёму: volume => price
+    $existing = $product->exists
+        ? $product->prices->keyBy(fn ($p) => $p->volume->value)->map->price
+        : collect();
+@endphp
+
 @section('content')
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
@@ -13,7 +21,7 @@
     <h1 class="h2 mb-4">{{ $product->exists ? 'Правка товара' : 'Новый товар' }}</h1>
 
     <div class="row">
-        <div class="col-lg-7">
+        <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-body">
                     <form method="POST" action="{{ $product->exists ? route('crm.admin.products.update', $product) : route('crm.admin.products.store') }}">
@@ -32,17 +40,36 @@
                             @error('description') <div class="invalid-feedback">{{ $message }}</div> @enderror
                         </div>
 
-                        <div class="row g-3">
-                            <div class="col-sm-6">
-                                <label for="price" class="form-label">Цена, ₽</label>
-                                <input type="number" step="0.01" min="0" max="999999.99" id="price" name="price" value="{{ old('price', $product->price) }}" class="form-control @error('price') is-invalid @enderror" required>
-                                @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <fieldset class="mb-3">
+                            <legend class="h6 fw-semibold border-bottom pb-2 mb-3">Цены по объёмам</legend>
+                            <div class="row g-3">
+                                @foreach ($volumes as $v)
+                                    @php
+                                        $key = "prices.{$v->value}";
+                                        $oldVal = old("prices.{$v->value}", $existing->get($v->value));
+                                    @endphp
+                                    <div class="col-md-4">
+                                        <label for="price-{{ $v->value }}" class="form-label">{{ $v->label() }}</label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.01" min="0" max="999999.99"
+                                                id="price-{{ $v->value }}"
+                                                name="prices[{{ $v->value }}][price]"
+                                                value="{{ $oldVal !== null ? number_format((float) $oldVal, 2, '.', '') : '' }}"
+                                                class="form-control" placeholder="0.00">
+                                            <input type="hidden" name="prices[{{ $v->value }}][volume]" value="{{ $v->value }}">
+                                            <span class="input-group-text">₽</span>
+                                        </div>
+                                        <div class="form-text small">Если объём недоступен — оставьте пустым.</div>
+                                    </div>
+                                @endforeach
                             </div>
-                            <div class="col-sm-6 d-flex align-items-end">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" @checked(old('is_active', $product->is_active ?? true))>
-                                    <label class="form-check-label" for="is_active">Активен (виден клиентам)</label>
-                                </div>
+                            @error('prices') <div class="text-danger small mt-2">{{ $message }}</div> @enderror
+                        </fieldset>
+
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" value="1" id="is_active" @checked(old('is_active', $product->is_active ?? true))>
+                                <label class="form-check-label" for="is_active">Активен (виден клиентам)</label>
                             </div>
                         </div>
 

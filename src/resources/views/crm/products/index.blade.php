@@ -25,9 +25,17 @@
                             @endif
 
                             <div class="d-flex justify-content-between align-items-center mt-3">
-                                <span class="fs-5 fw-bold">{{ number_format($product->price, 0, '.', ' ') }} ₽</span>
+                                @php($min = $product->minPrice())
+                                <span class="fs-5 fw-bold">
+                                    @if ($min !== null)
+                                        <span class="text-muted small fw-normal">от</span>
+                                        {{ number_format((float) $min, 0, '.', ' ') }} ₽
+                                    @else
+                                        <span class="text-muted">цена не задана</span>
+                                    @endif
+                                </span>
 
-                                @if (Route::has('crm.orders.create'))
+                                @if (Route::has('crm.orders.create') && $min !== null)
                                     <a href="{{ route('crm.orders.create', ['product' => $product->id]) }}" class="btn btn-sm btn-primary">Заказать</a>
                                 @else
                                     <span class="badge text-bg-secondary">Скоро</span>

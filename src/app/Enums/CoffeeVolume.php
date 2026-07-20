@@ -5,11 +5,8 @@ namespace App\Enums;
 /**
  * Объём упаковки кофе.
  *
- * 200гр — базовый (цена товара = цена за 200гр).
- * Остальные — множитель от базовой цены.
- *
- * ponytail: коэффициенты — догадка. Согласовать с бизнесом и,
- * при необходимости, вынести в конфиг или в таблицу volumes.
+ * ponytail: коэффициенты убраны — теперь цена задаётся индивидуально
+ * для каждого товара через product_prices (см. ProductPrice).
  */
 enum CoffeeVolume: string
 {
@@ -20,19 +17,9 @@ enum CoffeeVolume: string
     public function label(): string
     {
         return match ($this) {
-            self::G200 => '200 г (базовый)',
+            self::G200 => '200 г',
             self::G500 => '500 г',
             self::KG1 => '1 кг',
-        };
-    }
-
-    /** Множитель к базовой цене товара. */
-    public function multiplier(): float
-    {
-        return match ($this) {
-            self::G200 => 1.0,
-            self::G500 => 2.4,
-            self::KG1 => 4.5,
         };
     }
 

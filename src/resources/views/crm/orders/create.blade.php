@@ -37,9 +37,12 @@
 
                             <div class="col-md-6">
                                 <label for="volume" class="form-label">Объём</label>
-                                <select id="volume" name="volume" class="form-select @error('volume') is-invalid @enderror" data-base="{{ $product->price }}">
+                                <select id="volume" name="volume" class="form-select @error('volume') is-invalid @enderror">
                                     @foreach ($volumes as $v)
-                                        <option value="{{ $v->value }}" data-mult="{{ $v->multiplier() }}" @selected(old('volume') === $v->value)>{{ $v->label() }}</option>
+                                        @php($priceForVol = $product->priceFor($v))
+                                        <option value="{{ $v->value }}" data-price="{{ $priceForVol !== null ? number_format((float) $priceForVol, 2, '.', '') : '' }}" @selected(old('volume') === $v->value)>
+                                            {{ $v->label() }}@if ($priceForVol !== null) — {{ number_format((float) $priceForVol, 0, '.', ' ') }} ₽@endif
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('volume') <div class="invalid-feedback">{{ $message }}</div> @enderror
@@ -147,18 +150,19 @@
         </div>
 
         {{-- Итог --}}
+        @php($initialPrice = $product->priceFor($volumes->first()))
         <div class="col-lg-5">
             <div class="card shadow-sm bg-body-tertiary position-sticky" style="top: 80px;">
                 <div class="card-body">
                     <h5 class="card-title">Итог</h5>
                     <div class="d-flex justify-content-between text-muted small">
                         <span>Цена за упаковку</span>
-                        <span id="price-per-unit">{{ number_format($product->price, 0, '.', ' ') }} ₽</span>
+                        <span id="price-per-unit">{{ $initialPrice !== null ? number_format((float) $initialPrice, 0, '.', ' ') : '—' }} ₽</span>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between fs-5 fw-bold">
                         <span>К оплате</span>
-                        <span id="total">{{ number_format($product->price, 0, '.', ' ') }} ₽</span>
+                        <span id="total">{{ $initialPrice !== null ? number_format((float) $initialPrice, 0, '.', ' ') : '—' }} ₽</span>
                     </div>
                     <p class="text-muted small mt-2 mb-0">Оплата — наличными или переводом при получении.</p>
                 </div>
@@ -168,7 +172,6 @@
 
     @push('scripts')
         <script>
-            const base = {{ $product->price }};
             const fmt = new Intl.NumberFormat('ru-RU');
             const volSel = document.getElementById('volume');
             const qtyInput = document.getElementById('qty');
@@ -177,9 +180,8 @@
 
             const recalc = () => {
                 const opt = volSel.options[volSel.selectedIndex];
-                const mult = parseFloat(opt.dataset.mult) || 1;
+                const unit = parseFloat(opt.dataset.price) || 0;
                 const q = Math.max(1, parseInt(qtyInput.value, 10) || 1);
-                const unit = base * mult;
                 perUnit.textContent = fmt.format(unit) + ' ₽';
                 totalEl.textContent = fmt.format(unit * q) + ' ₽';
             };

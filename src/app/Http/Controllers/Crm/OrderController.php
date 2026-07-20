@@ -29,13 +29,22 @@ class OrderController extends Controller
     {
         abort_unless($product->is_active, 404);
 
+        $product->load('prices');
+
+        // Доступные объёмы = те, для которых задана цена.
+        $volumes = collect(CoffeeVolume::cases())
+            ->filter(fn (CoffeeVolume $v) => $product->hasVolume($v))
+            ->values();
+
+        abort_if($volumes->isEmpty(), 404, 'У товара не заданы цены.');
+
         /** @var Client $client */
         $client = $request->attributes->get('client');
 
         return view('crm.orders.create', [
             'product' => $product,
             'client' => $client,
-            'volumes' => CoffeeVolume::cases(),
+            'volumes' => $volumes,
         ]);
     }
 
@@ -50,12 +59,20 @@ class OrderController extends Controller
             ->where('is_active', true)
             ->findOrFail($data['product_id']);
 
-        $qty = (int) $data['qty'];
         $volume = CoffeeVolume::from($data['volume']);
-        $unitPrice = round($product->price * $volume->multiplier(), 2);
+        $unitPrice = $product->priceFor($volume);
+
+        // Объём должен быть доступен (цена задана).
+        if ($unitPrice === null) {
+            return back()->withInput()->withErrors(
+                ['volume' => "Товар недоступен в объёме «{$volume->label()}»."],
+            );
+        }
+
+        $qty = (int) $data['qty'];
         $total = round($unitPrice * $qty, 2);
 
-        $order = \DB::transaction(function () use ($client, $product, $data, $qty, $unitPrice, $total): Order {
+        $order = \DB::transaction(function () use ($client, $product, $data, $qty, $unitPrice, $total, $volume): Order {
             // Обновляем профиль клиента актуальными данными.
             $client->update([
                 'name' => $data['client_name'],
@@ -75,7 +92,7 @@ class OrderController extends Controller
                 'apartment' => $data['apartment'] ?? null,
                 'intercom' => $data['intercom'] ?? null,
                 'subscription' => $data['subscription'],
-                'volume' => $data['volume'],
+                'volume' => $volume,
                 'grind' => $data['grind'] ?? false,
             ]);
 

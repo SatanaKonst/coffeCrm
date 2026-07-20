@@ -11,6 +11,8 @@ class ProductController extends Controller
     {
         $products = Product::query()
             ->where('is_active', true)
+            ->whereHas('prices')
+            ->with('prices')
             ->orderBy('name')
             ->paginate(12);
 

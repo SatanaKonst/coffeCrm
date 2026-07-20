@@ -13,6 +13,7 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $products = Product::query()
+            ->with('prices')
             ->when($request->query('q'), fn ($q, $term) => $q->where('name', 'like', "%{$term}%"))
             ->unless($request->has('inactive'), fn ($q) => $q->where('is_active', true))
             ->orderBy('name')
@@ -32,7 +33,10 @@ class ProductController extends Controller
 
     public function store(StoreProductRequest $request)
     {
-        $product = Product::create($request->validated());
+        $data = $request->validated();
+
+        $product = Product::create($data);
+        $this->syncPrices($product, $data['prices'] ?? []);
 
         return redirect()
             ->route('crm.admin.products.index')
@@ -41,12 +45,19 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
+        $product->load('prices');
+
         return view('crm.admin.products.form', ['product' => $product]);
     }
 
     public function update(UpdateProductRequest $request, Product $product)
     {
-        $product->update($request->validated());
+        $data = $request->validated();
+        $product->update($data);
+
+        if (isset($data['prices'])) {
+            $this->syncPrices($product, $data['prices']);
+        }
 
         return redirect()
             ->route('crm.admin.products.index')
@@ -61,5 +72,27 @@ class ProductController extends Controller
         return redirect()
             ->route('crm.admin.products.index')
             ->with('success', "Товар «{$name}» удалён.");
+    }
+
+    /**
+     * Заменить все цены товара на переданные.
+     *
+     * @param  array<int, array{volume: string, price: numeric}>  $prices
+     */
+    private function syncPrices(Product $product, array $prices): void
+    {
+        $product->prices()->delete();
+
+        $rows = array_map(fn (array $p) => [
+            'volume' => $p['volume'],
+            'price' => $p['price'],
+            'product_id' => $product->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ], $prices);
+
+        if ($rows) {
+            $product->prices()->insert($rows);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\CoffeeVolume;
 use App\Models\Client;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -12,6 +13,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Product::factory() создаёт и цены (см. configure()).
         $products = Product::factory(8)->create();
 
         Client::factory(10)->create()->each(function (Client $client) use ($products) {
@@ -26,16 +28,18 @@ class DatabaseSeeder extends Seeder
                 for ($j = 0; $j < $itemsCount; $j++) {
                     $product = $products->random();
                     $qty = fake()->numberBetween(1, 3);
+                    $volume = fake()->randomElement(CoffeeVolume::cases());
+                    $unitPrice = $product->priceFor($volume) ?? (float) $product->prices->first()->price;
 
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $product->id,
                         'name' => $product->name,
-                        'price' => $product->price,
+                        'price' => $unitPrice,
                         'qty' => $qty,
                     ]);
 
-                    $total += $product->price * $qty;
+                    $total += $unitPrice * $qty;
                 }
 
                 $order->update(['total' => $total]);
