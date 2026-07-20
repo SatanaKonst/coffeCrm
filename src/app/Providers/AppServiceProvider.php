@@ -2,23 +2,17 @@
 
 namespace App\Providers;
 
+use App\Services\VkSign;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
-        //
+        $this->app->singleton(VkSign::class, function ($app): VkSign {
+            return new VkSign((string) $app['config']->get('services.vk.secret'));
+        });
     }
 
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        //
-    }
+    public function boot(): void {}
 }

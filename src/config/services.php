@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'vk' => [
+        'secret' => env('VK_MINIAPP_SECRET'),
+        'group_id' => env('VK_GROUP_ID'),
+        'root_admin_id' => env('VK_ROOT_ADMIN_ID'),
+    ],
+
 ];
