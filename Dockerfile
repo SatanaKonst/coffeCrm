@@ -34,13 +34,15 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 WORKDIR /var/www/html
 
-COPY composer.json composer.lock ./
+COPY src/composer.json src/composer.lock ./
 RUN composer install --no-scripts --no-autoloader --prefer-dist
 
-COPY package.json package-lock.json* ./
+COPY src/package.json src/package-lock.json* ./
 RUN npm install --ignore-scripts
 
-COPY . .
+COPY src/ .
+
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/coffee-crm.ini
 
 RUN composer dump-autoload --optimize \
     && chown -R www-data:www-data /var/www/html \
