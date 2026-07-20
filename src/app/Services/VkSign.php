@@ -51,8 +51,14 @@ class VkSign
     }
 
     /** Сгенерировать подпись (для dev-url и тестов). */
-    public function sign(array $vkParams): string
+    public function sign(array $params): string
     {
+        $vkParams = [];
+        foreach ($params as $key => $value) {
+            if (str_starts_with($key, 'vk_') && $key !== 'vk_sign') {
+                $vkParams[$key] = $value;
+            }
+        }
         ksort($vkParams);
         $paramsStr = http_build_query($vkParams);
 

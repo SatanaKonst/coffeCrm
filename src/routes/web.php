@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Crm\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Crm\HomeController;
 use App\Http\Controllers\Crm\OrderController;
 use App\Http\Controllers\Crm\ProductController;
@@ -16,4 +17,9 @@ Route::prefix('/crm')->name('crm.')->middleware('auth.vk')->group(function (): v
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create/{product}', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+
+    Route::middleware('admin.vk')->prefix('/admin')->name('admin.')->group(function (): void {
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::patch('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
+    });
 });
