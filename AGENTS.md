@@ -1,6 +1,6 @@
 # Coffee CRM
 
-CRM для продажи кофе через ВКонтакте.
+CRM для продажи кофе через ВКонтакте (VK Mini App).
 
 ## Рабочие правила
 - Общение на русском.
@@ -8,29 +8,45 @@ CRM для продажи кофе через ВКонтакте.
 - Коммиты небольшие, без мусора (`.idea/`, `vendor/`, `.env` не трогаем).
 
 ## Стек
-- Backend: Laravel (PHP ≥ 8.2)
+- Backend: Laravel 13 (PHP 8.4)
 - Frontend: Twitter Bootstrap (blade-шаблоны)
-- БД: MySQL
-- IDE: PhpStorm (PHP-интерпретатор уже настроен)
+- БД: MySQL 8.4
+- Инфра: Docker (compose), nginx + php-fpm
 
-## Инициализация (репо пустое)
-Laravel ещё не развёрнут. Первый запуск:
+## Окружение (всё в Docker)
+
+Контейнеры (см. `docker-compose.yml`):
+- `app` — php-fpm, код смонтирован в `/var/www/html`
+- `nginx` — раздаёт `public/`, порт **8080** хоста
+- `mysql` — БД `coffe_crm`, root/secret, порт 3306 хоста
+
+### Запуск
 ```
-composer create-project laravel/laravel . --prefer-dist
+docker compose up -d
 ```
-Если ругается на непустую директорию — временно перенести `AGENTS.md`, поставить Laravel, вернуть обратно.
+Приложение: http://localhost:8080
 
-После установки:
-- Прописать MySQL-доступы в `.env` (`DB_*`).
-- `php artisan key:generate`.
-- `php artisan migrate`.
+### Артизан / composer / npm — только через `docker exec`
+```
+docker exec coffeecrm-app php artisan <cmd>
+docker exec coffeecrm-app composer <cmd>
+docker exec coffeecrm-app npm <cmd>
+```
+Пересобрать образ после изменения `Dockerfile` или `composer.json`:
+```
+docker compose build app && docker compose up -d
+```
 
-## Типичные команды
-- Сервер: `php artisan serve`
-- Миграции: `php artisan migrate` (откат: `php artisan migrate:rollback`)
-- Тинкер: `php artisan tinker`
-- Тесты: `php artisan test` (один: `php artisan test --filter=TestName`)
+### Типичные команды (всё через контейнер `coffeecrm-app`)
+- Миграции: `docker exec coffeecrm-app php artisan migrate` (откат: `migrate:rollback`)
+- Тинкер: `docker exec -it coffeecrm-app php artisan tinker`
+- Тесты: `docker exec coffeecrm-app php artisan test` (один: `--filter=TestName`)
 - Логи: `storage/logs/laravel.log`
+- Очистить кэш: `docker exec coffeecrm-app php artisan optimize:clear`
+
+### Переменные `.env` (важные)
+- `DB_HOST=mysql` (имя сервиса), `DB_DATABASE=coffe_crm`, `DB_USERNAME=root`, `DB_PASSWORD=secret`
+- `VK_MINIAPP_SECRET`, `VK_GROUP_ID`, `VK_ROOT_ADMIN_ID` — заполняются пользователем
 
 ## VK Mini Apps
 Архитектура: Laravel-бэкенд + фронт в iframe внутри VK. Дока: https://dev.vk.com/ru/mini-apps/getting-started
