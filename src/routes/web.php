@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Crm\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Crm\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Crm\HomeController;
 use App\Http\Controllers\Crm\OrderController;
 use App\Http\Controllers\Crm\ProductController;
@@ -21,5 +22,12 @@ Route::prefix('/crm')->name('crm.')->middleware('auth.vk')->group(function (): v
     Route::middleware('admin.vk')->prefix('/admin')->name('admin.')->group(function (): void {
         Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
         Route::patch('/orders/{order}', [AdminOrderController::class, 'update'])->name('orders.update');
+
+        Route::get('/products', [AdminProductController::class, 'index'])->name('products.index');
+        Route::get('/products/create', [AdminProductController::class, 'create'])->name('products.create');
+        Route::post('/products', [AdminProductController::class, 'store'])->name('products.store');
+        Route::get('/products/{product}/edit', [AdminProductController::class, 'edit'])->name('products.edit');
+        Route::patch('/products/{product}', [AdminProductController::class, 'update'])->name('products.update');
+        Route::delete('/products/{product}', [AdminProductController::class, 'destroy'])->name('products.destroy');
     });
 });

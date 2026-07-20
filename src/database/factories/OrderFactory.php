@@ -18,7 +18,7 @@ class OrderFactory extends Factory
             'client_id' => Client::factory(),
             'status' => fake()->randomElement(OrderStatus::cases()),
             'total' => fake()->randomFloat(2, 150, 2000),
-            'comment' => fake()->optional(0.3)->realText(100),
+            'comment' => fake()->optional(0.3)->sentence(6),
         ];
     }
 }

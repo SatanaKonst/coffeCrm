@@ -16,7 +16,7 @@ class ProductFactory extends Factory
 
         return [
             'name' => fake()->randomElement($names).' #'.fake()->randomNumber(3),
-            'description' => fake()->optional(0.8)->realText(120),
+            'description' => fake()->optional(0.8)->sentence(8),
             'price' => fake()->randomFloat(2, 150, 600),
             'is_active' => true,
         ];
