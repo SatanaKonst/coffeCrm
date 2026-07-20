@@ -5,7 +5,7 @@
 @section('content')
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ route('crm.products.index') }}">Каталог</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('crm.dashboard') }}">Каталог</a></li>
             <li class="breadcrumb-item active" aria-current="page">Оформление</li>
         </ol>
     </nav>
@@ -43,7 +43,7 @@
                         </div>
 
                         <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('crm.products.index') }}" class="btn btn-outline-secondary">Отмена</a>
+                            <a href="{{ route('crm.dashboard') }}" class="btn btn-outline-secondary">Отмена</a>
                             <button type="submit" class="btn btn-primary">Оформить заказ</button>
                         </div>
                     </form>

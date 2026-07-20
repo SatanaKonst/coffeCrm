@@ -19,11 +19,6 @@
 
         <div class="collapse navbar-collapse" id="navMain">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                @if(Route::has('crm.products.index'))
-                    <li class="nav-item">
-                        <a class="nav-link{{ request()->routeIs('crm.products.*') ? ' active' : '' }}" href="{{ route('crm.products.index') }}">Каталог</a>
-                    </li>
-                @endif
                 @if(Route::has('crm.orders.index'))
                     <li class="nav-item">
                         <a class="nav-link{{ request()->routeIs('crm.orders.*') ? ' active' : '' }}" href="{{ route('crm.orders.index') }}">Мои заказы</a>

@@ -12,7 +12,6 @@ Route::get('/', function () {
 
 Route::prefix('/crm')->name('crm.')->middleware('auth.vk')->group(function (): void {
     Route::get('/', [ProductController::class, 'index'])->name('dashboard');
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/create/{product}', [OrderController::class, 'create'])->name('orders.create');

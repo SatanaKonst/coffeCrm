@@ -10,7 +10,7 @@
             <p class="text-muted mt-3">Возможно, страница была удалена или вы перешли по неверной ссылке.</p>
             <div class="d-flex justify-content-center gap-2 mt-4">
                 <a href="{{ route('crm.dashboard') }}" class="btn btn-primary">На главную</a>
-                <a href="{{ route('crm.products.index') }}" class="btn btn-outline-primary">В каталог</a>
+                <a href="{{ route('crm.dashboard') }}" class="btn btn-outline-primary">В каталог</a>
             </div>
         </div>
     </div>

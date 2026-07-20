@@ -5,7 +5,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-baseline mb-4">
         <h1 class="h2 mb-0">Мои заказы</h1>
-        <a href="{{ route('crm.products.index') }}" class="btn btn-outline-primary btn-sm">+ Новый заказ</a>
+        <a href="{{ route('crm.dashboard') }}" class="btn btn-outline-primary btn-sm">+ Новый заказ</a>
     </div>
 
     @if ($orders->isEmpty())

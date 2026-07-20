@@ -27,7 +27,7 @@ final class ProductCatalogTest extends TestCase
 
     public function test_guest_without_sign_gets_403(): void
     {
-        $this->get('/crm/products')->assertStatus(403);
+        $this->get('/crm')->assertStatus(403);
     }
 
     public function test_authenticated_client_sees_active_products_only(): void
@@ -35,7 +35,7 @@ final class ProductCatalogTest extends TestCase
         $active = Product::factory()->create(['name' => 'Latte Test', 'is_active' => true]);
         $inactive = Product::factory()->create(['name' => 'Hidden One', 'is_active' => false]);
 
-        $resp = $this->get($this->signedUrl('/crm/products'));
+        $resp = $this->get($this->signedUrl('/crm'));
 
         $resp->assertStatus(200)
             ->assertSee($active->name)
@@ -44,7 +44,7 @@ final class ProductCatalogTest extends TestCase
 
     public function test_empty_catalog_shows_placeholder(): void
     {
-        $resp = $this->get($this->signedUrl('/crm/products'));
+        $resp = $this->get($this->signedUrl('/crm'));
 
         $resp->assertStatus(200)
             ->assertSee('Ассортимент скоро появится');
