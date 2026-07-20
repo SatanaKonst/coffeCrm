@@ -32,15 +32,19 @@ composer create-project laravel/laravel . --prefer-dist
 - Тесты: `php artisan test` (один: `php artisan test --filter=TestName`)
 - Логи: `storage/logs/laravel.log`
 
-## VK-интеграция
-- Работаем через VK API. Токены и секреты — ТОЛЬКО в `.env`, через `config/services.php` (ключ `vk`).
-- В код и коммиты секреты не класть ни при каких условиях.
-- Confirmation token для webhook-ов VK — тоже в `.env`.
+## VK Mini Apps
+Архитектура: Laravel-бэкенд + фронт в iframe внутри VK. Дока: https://dev.vk.com/ru/mini-apps/getting-started
+
+- Фронт использует **VK Bridge** (JS SDK, `@vkontakte/vk-bridge`) для общения с нативным клиентом VK.
+- VK передаёт в URL iframe подписанные launch-параметры: `vk_user_id`, `vk_app_id`, `vk_group_id`, `vk_sign` и др.
+- Авторизация на бэке: проверить подпись `vk_sign` по секрету приложения, далее доверять `vk_user_id` как идентификатору юзера.
+- Секрет приложения (Mini App `client_secret` / `secure_key`) — ТОЛЬКО в `.env` (`VK_MINIAPP_SECRET`), через `config/services.php`.
+- Секреты в код и коммиты не класть ни при каких условиях.
 
 ## Безопасность
 - `.env` всегда в `.gitignore` (в Laravel по умолчанию).
-- Webhook-маршруты VK проверять через подтверждение и подпись.
-- Валидация на trust-boundary (контроллеры, webhook) — обязательна.
+- Все данные из launch-параметров VK — external input: валидировать на trust-boundary и проверять подпись перед использованием.
+- API-эндпоинты, не относящиеся к iframe VK, закрывать отдельной авторизацией (Mini Apps публичный iframe =任何人 может открыть URL).
 
 ## Соглашения по коду
 - Следуем конвенциям Laravel (Eloquent, Form Request, Resource).
