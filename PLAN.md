@@ -12,7 +12,7 @@ CRM для продажи кофе через ВКонтакте (VK Mini App). 
 
 ## Этапы (один этап = один атомарный коммит)
 
-### Этап 1 — Миграции и модели  *(СТАРТ)*
+### Этап 1 — Миграции и модели  *(ГОТОВО, commit `11aadbc`)*
 
 Таблицы:
 
@@ -31,47 +31,55 @@ CRM для продажи кофе через ВКонтакте (VK Mini App). 
 
 Фабрики + `DatabaseSeeder` для тестовых данных.
 
-### Этап 2 — VK авторизация и middleware
+### Этап 2 — VK авторизация и middleware  *(ГОТОВО, commit `da03e59`)*
 
 - `config/services.php` → секция `vk` (`secret`, `group_id`, `root_admin_id` из env).
 - `App\Services\VkSign` — проверка подписи `vk_sign`.
 - `App\Http\Middleware\AuthenticateVk`: parse launch params → verify → find-or-create `Client` → в сессию.
 - Группа `Route::prefix('/crm')->middleware('auth.vk')`.
 
-### Этап 3 — Layout + роут `/crm`
+### Этап 3 — Layout + роут `/crm`  *(ГОТОВО, commit `3749844`)*
 
 - `resources/views/layouts/crm.blade.php`: Bootstrap 5 (CDN), навбар, `@yield('content')`.
 - `HomeController@index` → `crm.dashboard`.
 - Admin-gate: сравнение `vk_user_id` с `config('services.vk.root_admin_id')`.
 
-### Этап 4 — Каталог продуктов (клиент)
+### Этап 4 — Каталог продуктов (клиент)  *(ГОТОВО, commit `44cc9ca`)*
 
 - `ProductController@index` → список активных продуктов.
 - Карточки, кнопка «Заказать» → форма.
 
-### Этап 5 — Оформление заказа
+### Этап 5 — Оформление заказа  *(ГОТОВО, commit `47cc0ed`)*
 
 - `OrderController@create/store`: товары + qty → `Order` + `OrderItem` (snapshot `name`/`price`).
 - FormRequest на каждый mutation.
 - `/crm/orders` — список своих заказов со статусом.
 
-### Этап 6 — Админка заказов
+### Этап 6 — Админка заказов  *(ГОТОВО, commit `6210f4b`)*
 
 - `Admin\OrderController` (gate admin) → список всех заказов.
 - Смена статуса (PATCH).
 - Таблица с фильтром по статусу.
 
-### Этап 7 — Админка продуктов (CRUD)
+### Этап 7 — Админка продуктов (CRUD)  *(ГОТОВО, commit `d715a91`)*
 
 - `Admin\ProductController`: index/create/store/edit/update/destroy.
 - FormRequest на каждый mutation.
 - Toggle `is_active`.
 
-### Этап 8 — Полировка
+### Этап 8 — Полировка  *(ГОТОВО)*
 
+- Страницы ошибок под стиль CRM (403, 404, 419, 500, 503).
+- Dashboard: карточки статистики (для админа — новые заказы/всего/активные товары; для клиента — свои заказы/товаров в каталоге).
+- Flash-сообщения уже подключены в layout (Этап 3).
+
+### Этап 9 — На будущее  *(не в MVP)*
+
+- `OrderPolicy` для второй линии обороны (пока изоляция в контроллере достаточна).
+- Корзина как отдельная сущность (сейчас заказ = один товар).
+- Оплата (VK Pay / внешний шлюз) — сейчас статусы ручные.
+- Категории товаров, учёт остатков (`stock`, списание при заказе).
 - `OrderPolicy` (client видит только свои).
-- Flash-сообщения + Bootstrap alerts.
-- 403/404 страницы под стиль.
 
 ## Open вопросы (не блокируют старт)
 
