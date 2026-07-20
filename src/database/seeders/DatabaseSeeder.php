@@ -2,24 +2,52 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Client;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $products = Product::factory(8)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        Client::factory(10)->create()->each(function (Client $client) use ($products) {
+            $ordersCount = fake()->numberBetween(1, 3);
+
+            for ($i = 0; $i < $ordersCount; $i++) {
+                $order = Order::factory()->for($client)->create();
+
+                $itemsCount = fake()->numberBetween(1, 4);
+                $total = 0;
+
+                for ($j = 0; $j < $itemsCount; $j++) {
+                    $product = $products->random();
+                    $qty = fake()->numberBetween(1, 3);
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $product->id,
+                        'name' => $product->name,
+                        'price' => $product->price,
+                        'qty' => $qty,
+                    ]);
+
+                    $total += $product->price * $qty;
+                }
+
+                $order->update(['total' => $total]);
+            }
+        });
+
+        $adminVkId = (int) env('VK_ROOT_ADMIN_ID', 0);
+        if ($adminVkId > 0) {
+            Client::firstOrCreate(
+                ['vk_user_id' => $adminVkId],
+                ['name' => 'Администратор'],
+            );
+        }
     }
 }
