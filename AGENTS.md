@@ -44,7 +44,7 @@ composer create-project laravel/laravel . --prefer-dist
 ## Безопасность
 - `.env` всегда в `.gitignore` (в Laravel по умолчанию).
 - Все данные из launch-параметров VK — external input: валидировать на trust-boundary и проверять подпись перед использованием.
-- API-эндпоинты, не относящиеся к iframe VK, закрывать отдельной авторизацией (Mini Apps публичный iframe =任何人 может открыть URL).
+- API-эндпоинты, не относящиеся к iframe VK, закрывать отдельной авторизацией (Mini Apps публичный iframe — URL может открыть кто угодно).
 
 ## Соглашения по коду
 - Следуем конвенциям Laravel (Eloquent, Form Request, Resource).
