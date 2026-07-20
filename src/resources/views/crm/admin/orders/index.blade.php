@@ -31,55 +31,55 @@
     @if ($orders->isEmpty())
         <div class="alert alert-info">Заказы не найдены.</div>
     @else
-        <div class="table-responsive">
-            <table class="table table-sm align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th scope="col">№</th>
-                        <th scope="col">Дата</th>
-                        <th scope="col">Клиент</th>
-                        <th scope="col">Состав</th>
-                        <th scope="col" class="text-end">Сумма</th>
-                        <th scope="col">Статус</th>
-                        <th scope="col">Изменить</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($orders as $order)
-                        <tr>
-                            <td class="fw-semibold">#{{ $order->id }}</td>
-                            <td class="text-muted small text-nowrap">{{ $order->created_at->format('d.m.Y H:i') }}</td>
-                            <td>{{ $order->client?->name }}</td>
-                            <td>
-                                <ul class="list-unstyled mb-0 small">
-                                    @foreach ($order->items as $item)
-                                        <li>{{ $item->name }} × {{ $item->qty }}</li>
-                                    @endforeach
-                                </ul>
-                                @if ($order->comment)
-                                    <div class="small text-muted fst-italic mt-1">«{{ \Illuminate\Support\Str::limit($order->comment, 80) }}»</div>
-                                @endif
-                            </td>
-                            <td class="text-end fw-semibold">{{ number_format($order->total, 0, '.', ' ') }} ₽</td>
-                            <td>@include('crm.partials.order-status-badge', ['status' => $order->status])</td>
-                            <td>
-                                <form method="POST" action="{{ route('crm.admin.orders.update', $order) }}{{ $filter['status'] || $filter['q'] ? '?'.http_build_query($filter) : '' }}">
-                                    @csrf
-                                    @method('PATCH')
-                                    <div class="input-group input-group-sm">
-                                        <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
-                                            @foreach ($statuses as $s)
-                                                <option value="{{ $s->value }}" @selected($order->status === $s)>{{ $s->label() }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </form>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        @foreach ($orders as $order)
+            <div class="card shadow-sm mb-2">
+                <div class="card-body py-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="fw-semibold">#{{ $order->id }}</span>
+                                @include('crm.partials.order-status-badge', ['status' => $order->status])
+                                <span class="text-muted small">{{ $order->created_at->format('d.m.Y H:i') }}</span>
+                            </div>
+                            <div class="small">
+                                <span class="text-muted">Клиент:</span>
+                                <span class="fw-semibold">{{ $order->client_name }}</span>
+                                <span class="text-muted ms-2">☎ {{ $order->client_phone }}</span>
+                            </div>
+                            <div class="small mt-1">
+                                <span class="text-muted">Адрес:</span> {{ $order->addressLine() }}
+                            </div>
+                            <div class="small mt-1">
+                                @foreach ($order->items as $item)
+                                    <span class="badge text-bg-light">{{ $item->name }} × {{ $item->qty }}</span>
+                                @endforeach
+                                <span class="badge text-bg-secondary">{{ $order->volume->short() }}</span>
+                                @if($order->grind) <span class="badge text-bg-info">помол</span> @endif
+                                <span class="badge text-bg-secondary">{{ $order->subscription->label() }}</span>
+                            </div>
+                            @if ($order->comment)
+                                <div class="small text-muted mt-1 fst-italic">«{{ \Illuminate\Support\Str::limit($order->comment, 120) }}»</div>
+                            @endif
+                        </div>
+
+                        <div class="text-end" style="min-width: 160px;">
+                            <div class="fs-5 fw-bold">{{ number_format($order->total, 0, '.', ' ') }} ₽</div>
+                            <form method="POST" action="{{ route('crm.admin.orders.update', $order) }}">
+                                @csrf
+                                @method('PATCH')
+                                <div class="input-group input-group-sm mt-2">
+                                    <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        @foreach ($statuses as $s)
+                                            <option value="{{ $s->value }}" @selected($order->status === $s)>{{ $s->label() }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
 
         <div class="mt-3">{{ $orders->links() }}</div>
     @endif

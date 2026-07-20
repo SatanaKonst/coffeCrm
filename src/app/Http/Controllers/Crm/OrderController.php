@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Crm;
 
+use App\Enums\CoffeeVolume;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Crm\StoreOrderRequest;
 use App\Models\Client;
@@ -28,32 +29,60 @@ class OrderController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        return view('crm.orders.create', ['product' => $product]);
+        /** @var Client $client */
+        $client = $request->attributes->get('client');
+
+        return view('crm.orders.create', [
+            'product' => $product,
+            'client' => $client,
+            'volumes' => CoffeeVolume::cases(),
+        ]);
     }
 
     public function store(StoreOrderRequest $request)
     {
         /** @var Client $client */
         $client = $request->attributes->get('client');
+        $data = $request->validated();
 
         /** @var Product $product */
         $product = Product::query()
             ->where('is_active', true)
-            ->findOrFail($request->validated('product_id'));
+            ->findOrFail($data['product_id']);
 
-        $qty = (int) $request->validated('qty');
+        $qty = (int) $data['qty'];
+        $volume = CoffeeVolume::from($data['volume']);
+        $unitPrice = round($product->price * $volume->multiplier(), 2);
+        $total = round($unitPrice * $qty, 2);
 
-        $order = \DB::transaction(function () use ($client, $product, $qty, $request): Order {
+        $order = \DB::transaction(function () use ($client, $product, $data, $qty, $unitPrice, $total): Order {
+            // Обновляем профиль клиента актуальными данными.
+            $client->update([
+                'name' => $data['client_name'],
+                'phone' => $data['client_phone'],
+            ]);
+
             $order = $client->orders()->create([
+                'client_name' => $data['client_name'],
+                'client_phone' => $data['client_phone'],
                 'status' => 'new',
-                'total' => $product->price * $qty,
-                'comment' => $request->validated('comment'),
+                'total' => $total,
+                'comment' => $data['comment'] ?? null,
+                'city' => $data['city'],
+                'street' => $data['street'],
+                'building' => $data['building'],
+                'entrance' => $data['entrance'] ?? null,
+                'apartment' => $data['apartment'] ?? null,
+                'intercom' => $data['intercom'] ?? null,
+                'subscription' => $data['subscription'],
+                'volume' => $data['volume'],
+                'grind' => $data['grind'] ?? false,
             ]);
 
             $order->items()->create([
                 'product_id' => $product->id,
                 'name' => $product->name,
-                'price' => $product->price,
+                'price' => $unitPrice,
                 'qty' => $qty,
             ]);
 
